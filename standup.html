@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Standup Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #12121a;
+    --card: rgba(255,255,255,0.03);
+    --border: rgba(0,240,255,0.15);
+    --cyan: #00f0ff;
+    --magenta: #ff00aa;
+    --green: #00ff88;
+    --red: #ff3355;
+    --yellow: #ffcc00;
+    --text: #e8f4ff;
+    --dim: #7a8a99;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 0.02em;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,240,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,240,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow-orb {
+    position: fixed;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.15;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb-cyan { background: var(--cyan); top: -100px; left: -100px; }
+  .orb-magenta { background: var(--magenta); bottom: -100px; right: -100px; }
+
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 1rem 2rem;
+    backdrop-filter: blur(20px);
+    background: rgba(10,10,15,0.7);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 1.1rem;
+    background: linear-gradient(90deg, var(--cyan), var(--magenta));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 1.5rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--dim);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--cyan); }
+
+  @media (max-width: 720px) {
+    .nav-links { display: none; }
+  }
+
+  section {
+    position: relative;
+    z-index: 1;
+    padding: 6rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding-top: 8rem;
+  }
+
+  .hero-title {
+    font-size: clamp(2.5rem, 10vw, 7rem);
+    font-weight: 900;
+    line-height: 0.95;
+    background: linear-gradient(135deg, var(--cyan) 0%, #ffffff 50%, var(--magenta) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 20px rgba(0,240,255,0.3)); }
+    50% { filter: drop-shadow(0 0 40px rgba(255,0,170,0.4)); }
+  }
+
+  .hero-sub {
+    margin-top: 1.5rem;
+    font-size: clamp(1rem, 2vw, 1.3rem);
+    color: var(--dim);
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+  }
+
+  .hero-btns {
+    margin-top: 3rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .btn {
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    border: none;
+    transition: all 0.25s;
+    display: inline-block;
+  }
+
+  .btn-primary {
+    background: var(--cyan);
+    color: #000;
+    box-shadow: 0 0 30px rgba(0,240,255,0.5);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 0 50px rgba(0,240,255,0.8);
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--cyan);
+    border: 1px solid var(--cyan);
+  }
+  .btn-secondary:hover {
+    background: rgba(0,240,255,0.1);
+  }
+
+  .stats {
+    margin-top: 4rem;
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    font-size: 0.75rem;
+    color: var(--dim);
+    letter-spacing: 0.15em;
+  }
+  .stats span { color: var(--cyan); font-weight: 700; }
+
+  .section-tag {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--cyan);
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 900;
+    margin-bottom: 1rem;
+  }
+
+  .section-desc {
+    color: var(--dim);
+    max-width: 700px;
+    margin-bottom: 3rem;
+    font-size: 0.95rem;
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .card:hover {
+    border-color: var(--cyan);
+    transform: translateY(-4px);
+    box-shadow: 0 10px 40px rgba(0,240,255,0.15);
+  }
+
+  .card:hover::before { opacity: 1; }
+
+  .card-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    color: var(--cyan);
+  }
+
+  .card p {
+    color: var(--dim);
+    font-size: 0.85rem;
+  }
+
+  .rules-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  @media (max-width: 800px) {
+    .rules-layout { grid-template-columns: 1fr; }
+  }
+
+  .rules-nav {
+    position: sticky;
+    top: 6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .rules-nav button {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--dim);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+    letter-spacing: 0.05em;
+  }
+
+  .rules-nav button:hover {
+    color: var(--cyan);
+    background: rgba(0,240,255,0.05);
+  }
+
+  .rules-nav button.active {
+    color: var(--cyan);
+    background: rgba(0,240,255,0.1);
+    border-color: var(--border);
+  }
+
+  .rules-nav button .letter {
+    display: inline-block;
+    width: 24px;
+    color: var(--magenta);
+    font-weight: 700;
+  }
+
+  .rule-section {
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .rule-section.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .rule-section h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: var(--cyan);
+  }
+
+  .rule-section h2 .letter {
+    color: var(--magenta);
+    margin-right: 0.5rem;
+  }
+
+  .rule-item {
+    display: flex;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .rule-item .num {
+    color: var(--cyan);
+    font-weight: 700;
+    min-width: 40px;
+    font-size: 0.85rem;
+  }
+
+  .rule-item .text {
+    color: var(--text);
+    font-size: 0.9rem;
+    flex: 1;
+  }
+
+  .rule-item .text strong { color: var(--yellow); }
+
+  /* Examples toggle */
+  .examples-toggle {
+    margin-top: 0.5rem;
+    background: rgba(0,240,255,0.05);
+    border: 1px solid var(--border);
+    color: var(--cyan);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .examples-toggle:hover {
+    background: rgba(0,240,255,0.15);
+    box-shadow: 0 0 15px rgba(0,240,255,0.3);
+  }
+
+  .examples-box {
+    display: none;
+    margin-top: 0.75rem;
+    background: rgba(0,0,0,0.35);
+    border-left: 3px solid var(--magenta);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    font-size: 0.82rem;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .examples-box.open { display: block; }
+
+  .examples-box h5 {
+    font-family: 'Orbitron', sans-serif;
+    color: var(--magenta);
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+
+  .examples-box ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .examples-box li {
+    padding: 0.4rem 0;
+    color: var(--text);
+    border-bottom: 1px dashed rgba(255,255,255,0.06);
+    display: flex;
+    gap: 0.75rem;
+  }
+
+  .examples-box li:last-child { border-bottom: none; }
+
+  .examples-box li .tag {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    height: fit-content;
+    flex-shrink: 0;
+    min-width: 90px;
+    text-align: center;
+  }
+
+  .tag-pause { background: rgba(255,204,0,0.15); color: var(--yellow); border: 1px solid rgba(255,204,0,0.3); }
+  .tag-continue { background: rgba(0,255,136,0.15); color: var(--green); border: 1px solid rgba(0,255,136,0.3); }
+
+  .demo-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .demo-tab {
+    padding: 0.75rem 1.5rem;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--dim);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .demo-tab:hover { color: var(--cyan); }
+
+  .demo-tab.active {
+    background: var(--cyan);
+    color: #000;
+    border-color: var(--cyan);
+    box-shadow: 0 0 20px rgba(0,240,255,0.4);
+  }
+
+  .demo-panel {
+    display: none;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .demo-panel.active { display: block; }
+
+  .demo-panel h3 {
+    font-size: 1.3rem;
+    margin-bottom: 1.5rem;
+    color: var(--cyan);
+  }
+
+  .duel-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1rem;
+    margin: 1.5rem 0;
+  }
+
+  @media (max-width: 600px) {
+    .duel-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  .player {
+    aspect-ratio: 1;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    background: var(--card);
+    user-select: none;
+    position: relative;
+  }
+
+  .player:hover { border-color: var(--cyan); }
+
+  .player .name {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--dim);
+  }
+
+  .player .status {
+    font-size: 0.6rem;
+    color: var(--dim);
+    margin-top: 0.25rem;
+    letter-spacing: 0.1em;
+  }
+
+  .player.standing {
+    border-color: var(--green);
+    background: rgba(0,255,136,0.1);
+    box-shadow: 0 0 20px rgba(0,255,136,0.3);
+  }
+
+  .player.standing .name { color: var(--green); }
+  .player.standing .status { color: var(--green); }
+
+  .player.eligible {
+    border-color: var(--yellow);
+    animation: pulseYellow 1s ease-in-out infinite;
+  }
+
+  @keyframes pulseYellow {
+    0%, 100% { box-shadow: 0 0 10px rgba(255,204,0,0.3); }
+    50% { box-shadow: 0 0 25px rgba(255,204,0,0.6); }
+  }
+
+  .duel-status {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: rgba(0,240,255,0.05);
+    border-left: 3px solid var(--cyan);
+    border-radius: 4px;
+    font-size: 0.9rem;
+  }
+
+  .countdown {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 3rem;
+    font-weight: 900;
+    color: var(--magenta);
+    text-align: center;
+    margin: 1rem 0;
+  }
+
+  .stopwatch {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(2.5rem, 8vw, 5rem);
+    font-weight: 900;
+    text-align: center;
+    color: var(--cyan);
+    text-shadow: 0 0 30px rgba(0,240,255,0.5);
+    margin: 2rem 0;
+    letter-spacing: 0.05em;
+  }
+
+  .tc-controls {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+
+  .tc-btn {
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    letter-spacing: 0.1em;
+  }
+
+  .tc-stand { background: var(--green); color: #000; }
+  .tc-stand:hover { box-shadow: 0 0 30px rgba(0,255,136,0.6); }
+  .tc-stand:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .tc-sit { background: var(--red); color: #fff; }
+  .tc-sit:hover { box-shadow: 0 0 30px rgba(255,51,85,0.6); }
+  .tc-sit:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .tc-leave { background: var(--yellow); color: #000; }
+  .tc-leave:hover { box-shadow: 0 0 30px rgba(255,204,0,0.6); }
+  .tc-leave:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .periods {
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .periods h4 {
+    font-size: 0.8rem;
+    color: var(--dim);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .period {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.85rem;
+  }
+
+  .period .label { color: var(--dim); }
+  .period .value { color: var(--cyan); font-weight: 700; }
+
+  .period.total {
+    border-top: 2px solid var(--cyan);
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    font-size: 1rem;
+  }
+
+  .period.total .value { color: var(--green); }
+
+  .toilet-bonus {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: rgba(255,204,0,0.05);
+    border: 1px solid rgba(255,204,0,0.3);
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .toilet-bonus h4 {
+    color: var(--yellow);
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.15em;
+  }
+
+  .toilet-bonus input[type=range] {
+    width: 100%;
+    max-width: 300px;
+    accent-color: var(--yellow);
+    margin: 0.5rem 0;
+  }
+
+  .toilet-result {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    color: var(--yellow);
+    margin-top: 0.5rem;
+    font-weight: 700;
+  }
+
+  .angle-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  @media (max-width: 700px) {
+    .angle-wrap { grid-template-columns: 1fr; }
+  }
+
+  .stick-figure {
+    height: 320px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background: rgba(0,0,0,0.3);
+    border-radius: 12px;
+    padding: 1rem;
+    position: relative;
+  }
+
+  .stick-figure svg { max-height: 100%; }
+
+  .slider-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .slider-group label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--dim);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .slider-group label span {
+    color: var(--cyan);
+    font-weight: 700;
+  }
+
+  .slider-group input[type=range] {
+    width: 100%;
+    accent-color: var(--cyan);
+  }
+
+  .verdict {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    text-align: center;
+    border-radius: 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    transition: all 0.3s;
+  }
+
+  .verdict.stand {
+    background: rgba(0,255,136,0.1);
+    border: 1px solid var(--green);
+    color: var(--green);
+    box-shadow: 0 0 30px rgba(0,255,136,0.2);
+  }
+
+  .verdict.sit {
+    background: rgba(255,51,85,0.1);
+    border: 1px solid var(--red);
+    color: var(--red);
+    box-shadow: 0 0 30px rgba(255,51,85,0.2);
+  }
+
+  .risk-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+
+  @media (max-width: 700px) {
+    .risk-wrap { grid-template-columns: 1fr; }
+  }
+
+  .risk-meter {
+    height: 20px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 1rem 0;
+  }
+
+  .risk-meter-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), var(--yellow), var(--red));
+    transition: width 0.3s;
+  }
+
+  .risk-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .risk-btn {
+    flex: 1;
+    padding: 1rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+    letter-spacing: 0.1em;
+  }
+
+  .risk-btn:hover {
+    border-color: var(--cyan);
+    background: rgba(0,240,255,0.05);
+  }
+
+  .risk-log {
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    min-height: 200px;
+    font-size: 0.85rem;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .risk-log div {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .risk-log .good { color: var(--green); }
+  .risk-log .bad { color: var(--red); }
+  .risk-log .neutral { color: var(--dim); }
+  .risk-log .warn { color: var(--yellow); }
+
+  /* Consequence tracker */
+  .consequence-tracker {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .consequence-slot {
+    flex: 1;
+    min-width: 70px;
+    padding: 0.6rem;
+    border-radius: 6px;
+    text-align: center;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(0,0,0,0.3);
+    color: var(--dim);
+    transition: all 0.3s;
+  }
+
+  .consequence-slot.active-vr {
+    background: rgba(255,204,0,0.15);
+    border-color: var(--yellow);
+    color: var(--yellow);
+    box-shadow: 0 0 15px rgba(255,204,0,0.3);
+  }
+
+  .consequence-slot.active-1pt {
+    background: rgba(255,51,85,0.15);
+    border-color: var(--red);
+    color: var(--red);
+    box-shadow: 0 0 15px rgba(255,51,85,0.3);
+  }
+
+  .consequence-slot.active-4pt {
+    background: rgba(255,0,170,0.15);
+    border-color: var(--magenta);
+    color: var(--magenta);
+    box-shadow: 0 0 15px rgba(255,0,170,0.3);
+  }
+
+  footer {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--dim);
+    font-size: 0.8rem;
+    border-top: 1px solid var(--border);
+    position: relative;
+    z-index: 1;
+  }
+
+  footer .logo-line {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(90deg, var(--cyan), var(--magenta));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .divider {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--cyan), var(--magenta));
+    margin-bottom: 2rem;
+    border-radius: 2px;
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div class="glow-orb orb-cyan"></div>
+<div class="glow-orb orb-magenta"></div>
+
+<nav>
+  <div class="logo">THE STANDUP GAME</div>
+  <ul class="nav-links">
+    <li><a href="#what-is-it">About</a></li>
+    <li><a href="#rules">Rules</a></li>
+    <li><a href="#demos">Demos</a></li>
+  </ul>
+</nav>
+
+<section id="hero">
+  <h1 class="hero-title">THE STANDUP<br>GAME</h1>
+  <p class="hero-sub">Compete under risk. Stand to win.</p>
+  <div class="hero-btns">
+    <a href="#demos" class="btn btn-primary">Play Demo</a>
+    <a href="#rules" class="btn btn-secondary">Read Rules</a>
+  </div>
+  <div class="stats">
+    <div>⚡ <span>2</span> FORMATS</div>
+    <div>🎯 <span>10</span> SECTIONS</div>
+    <div>🏆 <span>+1</span> PER DUEL WIN</div>
+    <div>🚽 <span>+60s</span> TOILET BONUS</div>
+    <div>⚠️ <span>−5</span> ON 1PT</div>
+  </div>
+</section>
+
+<section id="what-is-it" class="reveal">
+  <div class="section-tag">01 / OVERVIEW</div>
+  <h2 class="section-title">What Is The Standup Game?</h2>
+  <div class="divider"></div>
+  <p class="section-desc">
+    A spontaneous classroom competition created and played by students. Players voluntarily stand during normal classroom time and compete using reaction speed, timing, endurance, decision-making and risk management.
+  </p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-icon">🎯</div>
+      <h3>Voluntary Only</h3>
+      <p>Only voluntary actions performed by players count as game actions. Teacher-directed movement does not count.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">👩‍🏫</div>
+      <h3>Teachers Are Obstacles</h3>
+      <p>Teachers are not players, referees, or judges. They are environmental hazards in the real classroom.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">⚔️</div>
+      <h3>Two Formats</h3>
+      <p>Duels and Time Counter — each tests a different combination of nerve, patience, and timing.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon">⚠️</div>
+      <h3>Real Consequences</h3>
+      <p>VR does not change score. 1PT sets you to −5. 4PT Reset removes you from the game entirely.</p>
+    </div>
+  </div>
+</section>
+
+<section id="rules" class="reveal">
+  <div class="section-tag">02 / RULEBOOK</div>
+  <h2 class="section-title">Full Rules</h2>
+  <div class="divider"></div>
+
+  <div class="rules-layout">
+    <div class="rules-nav" id="rulesNav"></div>
+    <div id="rulesContent"></div>
+  </div>
+</section>
+
+<section id="demos" class="reveal">
+  <div class="section-tag">03 / INTERACTIVE</div>
+  <h2 class="section-title">Demos</h2>
+  <div class="divider"></div>
+
+  <div class="demo-tabs">
+    <button class="demo-tab active" data-demo="duel">⚔️ Duel Simulator</button>
+    <button class="demo-tab" data-demo="time">⏱️ Time Counter</button>
+    <button class="demo-tab" data-demo="angle">🧍 Standing Checker</button>
+    <button class="demo-tab" data-demo="risk">🎲 Risk Simulator</button>
+  </div>
+
+  <div class="demo-panel active" id="demo-duel">
+    <h3>⚔️ Duel Simulator</h3>
+    <p style="color:var(--dim);font-size:0.85rem;margin-bottom:1rem;">
+      Click a player to make them stand and initiate a Duel. The 5-second window starts. Others may join by standing. Then, click players to sit them one by one. Last standing wins.
+    </p>
+    <div class="duel-grid" id="duelGrid"></div>
+    <div class="duel-status" id="duelStatus">
+      <strong style="color:var(--cyan);">READY.</strong> Click any player to initiate a Duel.
+    </div>
+    <div style="margin-top:1rem;display:flex;gap:1rem;flex-wrap:wrap;">
+      <button class="btn btn-secondary" id="duelReset">Reset Duel</button>
+      <div style="display:flex;align-items:center;gap:0.5rem;color:var(--dim);font-size:0.85rem;">
+        Score: <span id="duelScore" style="color:var(--cyan);font-weight:700;">0</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-panel" id="demo-time">
+    <h3>⏱️ Time Counter</h3>
+    <p style="color:var(--dim);font-size:0.85rem;margin-bottom:1rem;">
+      Stand to start the stopwatch. Sit to stop and bank your time. Leave the room to pause. Accumulate the most valid standing time to win.
+    </p>
+    <div class="stopwatch" id="tcDisplay">00:00.0</div>
+    <div class="tc-controls">
+      <button class="tc-btn tc-stand" id="tcStand">STAND</button>
+      <button class="tc-btn tc-sit" id="tcSit" disabled>SIT</button>
+      <button class="tc-btn tc-leave" id="tcLeave" disabled>LEAVE ROOM</button>
+    </div>
+    <div class="periods">
+      <h4>Session Log</h4>
+      <div id="tcPeriods"></div>
+      <div class="period total">
+        <span class="label">TOTAL</span>
+        <span class="value" id="tcTotal">00:00.0</span>
+      </div>
+    </div>
+    <div class="toilet-bonus">
+      <h4>🚽 BEST OF 12 TOILET BONUS</h4>
+      <p style="font-size:0.8rem;color:var(--dim);margin-bottom:0.75rem;">How long were you away?</p>
+      <input type="range" id="toiletSlider" min="0" max="20" value="0" step="1">
+      <div style="font-size:0.85rem;color:var(--dim);">Away: <span id="toiletMins" style="color:var(--yellow);">0</span> min</div>
+      <div class="toilet-result" id="toiletBonus">+0s</div>
+      <button class="btn btn-secondary" id="toiletApply" style="margin-top:1rem;font-size:0.7rem;">Apply Bonus</button>
+    </div>
+  </div>
+
+  <div class="demo-panel" id="demo-angle">
+    <h3>🧍 Standing Angle Checker</h3>
+    <p style="color:var(--dim);font-size:0.85rem;margin-bottom:1rem;">
+      Drag the slider to adjust leg angle from the floor. Per the official rules, legs must be between 45° and 135°, with knees straight.
+    </p>
+    <div class="angle-wrap">
+      <div class="stick-figure" id="stickFigure">
+        <svg viewBox="0 0 200 300" width="100%" height="100%">
+          <line x1="10" y1="280" x2="190" y2="280" stroke="#00f0ff" stroke-width="2" opacity="0.5"/>
+          <circle id="head" cx="100" cy="80" r="18" fill="none" stroke="#e8f4ff" stroke-width="3"/>
+          <line id="torso" x1="100" y1="98" x2="100" y2="180" stroke="#e8f4ff" stroke-width="3"/>
+          <line id="legL" x1="100" y1="180" x2="70" y2="280" stroke="#e8f4ff" stroke-width="3" stroke-linecap="round"/>
+          <line id="legR" x1="100" y1="180" x2="130" y2="280" stroke="#e8f4ff" stroke-width="3" stroke-linecap="round"/>
+          <line id="kneeLine" x1="100" y1="180" x2="100" y2="280" stroke="#00f0ff" stroke-width="1" stroke-dasharray="4 4" opacity="0.4"/>
+        </svg>
+      </div>
+      <div>
+        <div class="slider-group">
+          <label>Leg Angle from Floor <span id="angleVal">90°</span></label>
+          <input type="range" id="angleSlider" min="0" max="180" value="90" step="1">
+        </div>
+        <div class="verdict stand" id="angleVerdict">✅ STANDING</div>
+        <div style="margin-top:1rem;font-size:0.75rem;color:var(--dim);line-height:1.8;">
+          <div>• 45°–135° → <span style="color:var(--green);">valid</span></div>
+          <div>• Below 45° → <span style="color:var(--red);">sitting (too horizontal)</span></div>
+          <div>• Above 135° → <span style="color:var(--red);">invalid (too reclined)</span></div>
+          <div>• Knees are assumed straight (~180°) for all valid stands</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-panel" id="demo-risk">
+    <h3>🎲 Risk Simulator</h3>
+    <p style="color:var(--dim);font-size:0.85rem;margin-bottom:1rem;">
+      Teacher awareness is random each turn. Decide whether to stand, wait, or sit. Consequences escalate: VR → 1PT → 4PT Reset.
+    </p>
+    <div class="risk-wrap">
+      <div>
+        <label style="font-size:0.8rem;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;">Teacher Awareness</label>
+        <div class="risk-meter"><div class="risk-meter-fill" id="riskMeter" style="width:60%;"></div></div>
+        <div style="text-align:right;font-size:0.85rem;color:var(--cyan);" id="riskVal">60%</div>
+
+        <div class="risk-actions">
+          <button class="risk-btn" data-action="stand">STAND</button>
+          <button class="risk-btn" data-action="wait">WAIT</button>
+          <button class="risk-btn" data-action="sit">SIT</button>
+        </div>
+
+        <div style="margin-top:1.5rem;">
+          <div style="font-size:0.8rem;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.5rem;">Your Score</div>
+          <div style="font-family:'Orbitron',sans-serif;font-size:2rem;font-weight:900;color:var(--cyan);" id="riskScore">0</div>
+        </div>
+
+        <div style="margin-top:1.5rem;">
+          <div style="font-size:0.8rem;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.5rem;">Consequence Tracker</div>
+          <div class="consequence-tracker">
+            <div class="consequence-slot" id="slotVR">VR</div>
+            <div class="consequence-slot" id="slot1PT">1PT</div>
+            <div class="consequence-slot" id="slot4PT">4PT RESET</div>
+          </div>
+          <div style="font-size:0.7rem;color:var(--dim);margin-top:0.5rem;">Escalation: 1st catch → VR • 2nd catch → 1PT • 3rd catch → 4PT Reset</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:0.8rem;color:var(--dim);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.5rem;">Event Log</div>
+        <div class="risk-log" id="riskLog">
+          <div class="neutral">Ready. Choose an action.</div>
+        </div>
+        <button class="btn btn-secondary" id="riskReset" style="margin-top:1rem;font-size:0.7rem;">Reset Simulator</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="logo-line">THE STANDUP GAME</div>
+  <div>Competition under risk. The rules determine who wins; the classroom determines how risky each move is.</div>
+</footer>
+
+<script>
+/* =========================
+   RULES DATA
+   ========================= */
+const rulesData = [
+  {
+    letter: 'A',
+    title: 'Game Start Condition',
+    items: [
+      'The game is live only when every player is fully seated.',
+      'No player may initiate a Duel or start a Time Counter until this condition is met.',
+      'Once every player is seated, the game is live — any player may voluntarily stand to begin play.',
+      'Players who are out of the room do not block the start if the group agrees.',
+      {
+        text: 'If a teacher addresses the class and directs movement, the game pauses.',
+        examples: {
+          title: 'Teacher Addresses Class — Examples',
+          yes: [
+            '"Everyone stand up for the national anthem"',
+            '"Everybody move to your group tables"',
+            '"Class, we\'re going to the library — line up"',
+            '"Everyone stand behind your chairs"',
+            'Fire drill or lockdown announcement',
+            '"Take out your books and sit on the carpet"',
+            'Teacher starts a formal test and tells everyone to clear desks'
+          ],
+          no: [
+            'Teacher tells one player to sit (that player is removed from Duel only)',
+            'Teacher tells one player to stand (not a game action)',
+            'Teacher just talks to the class without directing movement',
+            'Teacher looks around the room (game continues — just risk)'
+          ]
+        }
+      },
+      'After a pause, all players must sit again. Once everyone is seated, the game is live again.',
+      'Time Counter totals and Duel points carry over across pauses.'
+    ]
+  },
+  {
+    letter: 'B',
+    title: 'What Counts as Standing',
+    items: [
+      'Legs must be between 45° and 135° from the floor.',
+      'Knees must be straight (~180°) — no bend past straight.',
+      'Walking is fine — walking always counts as standing.',
+      'Resting your legs is fine — leg fatigue has nothing to do with standing status.',
+      'Support is irrelevant — leaning on a desk, wall, or person does not disqualify you.',
+      'Legs below 45° from the floor → sitting.',
+      'Legs above 135° from the floor → not valid.',
+      'Knees bent past 180° → sitting.',
+      'Squatting, crouching, or kneeling → sitting.',
+      'If it is genuinely ambiguous whether a player is standing → they are considered sitting.',
+      'If a player is unsure whether they are standing → they are not standing.'
+    ]
+  },
+  {
+    letter: 'C',
+    title: 'Voluntary Actions',
+    items: [
+      'Only voluntary actions performed by players count as game actions.',
+      'If a teacher directs a player to stand, sit, move seats, move somewhere else, leave the room, or otherwise directs their movement → that action does not count as a voluntary game action.',
+      'Teacher intervention can still have real-world consequences for the player.',
+      'If a teacher tells the whole class to stand → all current Duels are paused, not voided.',
+      'If a teacher tells a specific player to sit → that sit is not voluntary, but they are still removed from the Duel.',
+      'If a teacher tells a specific player to stand → that stand does not count as a game action.'
+    ]
+  },
+  {
+    letter: 'D',
+    title: 'Duels',
+    items: [
+      'Everyone begins seated.',
+      'Any player may voluntarily stand to initiate a Duel.',
+      'The initiator must remain standing for at least 5 seconds.',
+      'During those 5 seconds, other players may voluntarily stand and join the Duel.',
+      'Anyone who fails to stand during those 5 seconds is not eligible for that Duel.',
+      'Once the initiation period ends, the Duel becomes active.',
+      'Objective: be the last eligible player still standing.',
+      'Players may voluntarily sit whenever they choose → they are removed from the Duel.',
+      'The final eligible player standing is the winner → +1 point.',
+      'Everyone else receives 0 points.',
+      'If nobody joins during the 5-second window → the initiator automatically wins.',
+      'If two or more players sit so close together that it is genuinely impossible to determine who was last → the Duel is void, no points.',
+      'Leaving the classroom eliminates the player from the current Duel — no re-entry.',
+      'Points are cumulative across a session unless the group agrees otherwise.',
+      'A player may hold negative points.',
+      'A player may only be in one Duel at a time.'
+    ]
+  },
+  {
+    letter: 'E',
+    title: 'Time Counter',
+    items: [
+      'A player voluntarily stands → starts their stopwatch.',
+      'The stopwatch runs only while the player is standing inside the classroom.',
+      'When they voluntarily sit, the stopwatch stops and the recorded time is added to their cumulative total.',
+      'The player can stand again later and continue building their total.',
+      'The player with the greatest accumulated valid standing time wins.',
+      'If a player leaves the classroom, their stopwatch is paused and time outside does not count.',
+      'The timer resumes when they return.'
+    ]
+  },
+  {
+    letter: 'F',
+    title: 'Best of 12 Toilet Bonus',
+    items: [
+      'A player who is away using the toilet for 12 minutes receives a fixed +60-second bonus on return.',
+      'Staying away longer than 12 minutes does not increase the bonus beyond 60 seconds.',
+      'The 12 minutes is cumulative per toilet trip, not per day.',
+      'The player must be actually using the toilet — wandering the halls does not qualify.',
+      'Bonus is added once per qualifying trip.',
+      'Multiple qualifying trips → multiple bonuses.',
+      'If a player is away for 11:59 → no bonus.'
+    ]
+  },
+  {
+    letter: 'G',
+    title: 'School Consequence Penalties',
+    items: [
+      'Receiving a VR does not change the player\'s game score.',
+      'Receiving a 1PT immediately changes the player\'s game score to −5 points.',
+      'A second 1PT while already negative → stacks to −10.',
+      'Being sent to 4PT Reset removes the player from the game and ends or resets their run.',
+      'These penalties are part of the game\'s scoring system rather than a replacement for the school\'s actual consequences.'
+    ]
+  },
+  {
+    letter: 'H',
+    title: 'Risk and the Classroom',
+    items: [
+      'The game rules determine how points and time are calculated.',
+      'The classroom environment determines how risky it is to make a move.',
+      'A player might have the perfect opportunity to stand and gain an advantage, but if they believe a teacher is likely to notice, that decision becomes a risk-versus-reward calculation.',
+      'A player who takes constant risks might accumulate points or time faster but may also be noticed more often.',
+      'A cautious player may score more slowly but reduce their exposure.',
+      'The game is about deciding when to act, when to wait, when to stop, and how much risk is worth taking.'
+    ]
+  },
+  {
+    letter: 'I',
+    title: 'Leaving the Classroom',
+    items: [
+      'Any exit — toilet, water, nurse, errand — counts as leaving.',
+      'In Duels: leaving immediately eliminates the player from the current Duel.',
+      'In Duels: the player cannot return and re-enter that same Duel.',
+      'In Time Counter: the stopwatch is paused on exit and resumes on re-entry.',
+      'Time spent outside never counts toward Time Counter total.',
+      'If a player is sent out by a teacher → not voluntary, but still removed from any active Duel and timer pauses.'
+    ]
+  },
+  {
+    letter: 'J',
+    title: 'Core Principle',
+    items: [
+      'The Standup Game is a spontaneous, risk-based classroom competition.',
+      'Players compete through reaction speed, timing, endurance, and accumulated standing time.',
+      'The surrounding classroom environment creates uncertainty and risk.',
+      'In Duels, the key objective is to react quickly enough to enter the competition and then remain standing longer than everyone else.',
+      'In Time Counter, the objective is to accumulate the greatest amount of valid standing time across multiple opportunities.',
+      'The core concept is competition under risk: the rules determine who wins, but the real classroom environment determines how difficult and risky it is to make each move.'
+    ]
+  }
+];
+
+/* =========================
+   RENDER RULES
+   ========================= */
+const rulesNav = document.getElementById('rulesNav');
+const rulesContent = document.getElementById('rulesContent');
+
+rulesData.forEach((section, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'rules-nav-btn' + (i === 0 ? ' active' : '');
+  btn.innerHTML = `<span class="letter">${section.letter}</span>${section.title}`;
+  btn.dataset.target = `rule-${section.letter}`;
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.rules-nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.rule-section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`rule-${section.letter}`).classList.add('active');
+  });
+  rulesNav.appendChild(btn);
+
+  const sec = document.createElement('div');
+  sec.className = 'rule-section' + (i === 0 ? ' active' : '');
+  sec.id = `rule-${section.letter}`;
+
+  const itemsHTML = section.items.map((item, j) => {
+    if (typeof item === 'string') {
+      return `
+        <div class="rule-item">
+          <div class="num">${section.letter}${j + 1}.</div>
+          <div class="text">${item}</div>
+        </div>`;
+    } else {
+      // Item with examples
+      const exId = `ex-${section.letter}-${j}`;
+      const yesHTML = item.examples.yes.map(e => `
+        <li><span class="tag tag-pause">PAUSE</span>${e}</li>`).join('');
+      const noHTML = item.examples.no.map(e => `
+        <li><span class="tag tag-continue">CONTINUE</span>${e}</li>`).join('');
+      return `
+        <div class="rule-item">
+          <div class="num">${section.letter}${j + 1}.</div>
+          <div class="text">
+            ${item.text}
+            <br>
+            <button class="examples-toggle" data-target="${exId}">▸ Click to show examples</button>
+            <div class="examples-box" id="${exId}">
+              <h5>${item.examples.title}</h5>
+              <div style="font-size:0.7rem;color:var(--dim);letter-spacing:0.1em;margin-bottom:0.5rem;text-transform:uppercase;">Game Pauses:</div>
+              <ul>${yesHTML}</ul>
+              <div style="font-size:0.7rem;color:var(--dim);letter-spacing:0.1em;margin:0.75rem 0 0.5rem;text-transform:uppercase;">Game Continues:</div>
+              <ul>${noHTML}</ul>
+            </div>
+          </div>
+        </div>`;
+    }
+  }).join('');
+
+  sec.innerHTML = `
+    <h2><span class="letter">${section.letter}</span>${section.title}</h2>
+    ${itemsHTML}
+  `;
+  rulesContent.appendChild(sec);
+});
+
+// Wire up example toggles
+document.querySelectorAll('.examples-toggle').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const box = document.getElementById(btn.dataset.target);
+    const open = box.classList.toggle('open');
+    btn.innerHTML = open ? '▾ Hide examples' : '▸ Click to show examples';
+  });
+});
+
+/* =========================
+   DEMO TABS
+   ========================= */
+document.querySelectorAll('.demo-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.demo-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.demo-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(`demo-${tab.dataset.demo}`).classList.add('active');
+  });
+});
+
+/* =========================
+   DUEL SIMULATOR
+   ========================= */
+const duelPlayers = ['A', 'B', 'C', 'D', 'E', 'F'];
+const duelGrid = document.getElementById('duelGrid');
+const duelStatus = document.getElementById('duelStatus');
+const duelScoreEl = document.getElementById('duelScore');
+
+let duelState = {
+  phase: 'idle',
+  initiator: null,
+  eligible: [],
+  standing: [],
+  score: 0
+};
+
+function renderDuel() {
+  duelGrid.innerHTML = '';
+  duelPlayers.forEach(p => {
+    const el = document.createElement('div');
+    el.className = 'player';
+    if (duelState.standing.includes(p)) el.classList.add('standing');
+    if (duelState.phase === 'window' && duelState.standing.includes(p)) el.classList.add('eligible');
+    el.innerHTML = `
+      <div class="name">${p}</div>
+      <div class="status">${duelState.standing.includes(p) ? 'STANDING' : 'SEATED'}</div>
+    `;
+    el.addEventListener('click', () => handleDuelClick(p));
+    duelGrid.appendChild(el);
+  });
+}
+
+function handleDuelClick(p) {
+  if (duelState.phase === 'idle') {
+    duelState.phase = 'window';
+    duelState.initiator = p;
+    duelState.standing = [p];
+    duelState.eligible = [p];
+    duelStatus.innerHTML = `<strong style="color:var(--magenta);">DUEL INITIATED BY ${p}.</strong> 5-second window — click other players to make them stand and join.`;
+    renderDuel();
+
+    let count = 5;
+    const cd = document.createElement('div');
+    cd.className = 'countdown';
+    cd.id = 'duelCountdown';
+    cd.textContent = count;
+    duelStatus.appendChild(cd);
+
+    const interval = setInterval(() => {
+      count--;
+      if (count > 0) {
+        cd.textContent = count;
+      } else {
+        clearInterval(interval);
+        cd.remove();
+        duelState.phase = 'active';
+        duelStatus.innerHTML = `<strong style="color:var(--green);">DUEL ACTIVE.</strong> Eligible: ${duelState.eligible.join(', ')}. Click players to sit them down. Last standing wins.`;
+        renderDuel();
+      }
+    }, 1000);
+  } else if (duelState.phase === 'window') {
+    if (!duelState.standing.includes(p)) {
+      duelState.standing.push(p);
+      duelState.eligible.push(p);
+      renderDuel();
+    }
+  } else if (duelState.phase === 'active') {
+    if (duelState.standing.includes(p)) {
+      duelState.standing = duelState.standing.filter(x => x !== p);
+      renderDuel();
+      if (duelState.standing.length === 0) {
+        duelState.phase = 'done';
+        duelStatus.innerHTML = `<strong style="color:var(--yellow);">VOID.</strong> Everyone sat at once. No points.`;
+      } else if (duelState.standing.length === 1) {
+        const winner = duelState.standing[0];
+        duelState.phase = 'done';
+        duelState.score += 1;
+        duelScoreEl.textContent = duelState.score;
+        duelStatus.innerHTML = `<strong style="color:var(--green);">🏆 WINNER: ${winner} (+1 point).</strong> Click Reset to play again.`;
+      }
+    }
+  }
+}
+
+document.getElementById('duelReset').addEventListener('click', () => {
+  duelState = {
+    phase: 'idle',
+    initiator: null,
+    eligible: [],
+    standing: [],
+    score: duelState.score
+  };
+  duelStatus.innerHTML = `<strong style="color:var(--cyan);">READY.</strong> Click any player to initiate a Duel.`;
+  renderDuel();
+});
+
+renderDuel();
+
+/* =========================
+   TIME COUNTER
+   ========================= */
+const tcDisplay = document.getElementById('tcDisplay');
+const tcStand = document.getElementById('tcStand');
+const tcSit = document.getElementById('tcSit');
+const tcLeave = document.getElementById('tcLeave');
+const tcPeriods = document.getElementById('tcPeriods');
+const tcTotal = document.getElementById('tcTotal');
+const toiletSlider = document.getElementById('toiletSlider');
+const toiletMins = document.getElementById('toiletMins');
+const toiletBonus = document.getElementById('toiletBonus');
+
+let tc = {
+  running: false,
+  startTime: null,
+  elapsed: 0,
+  periods: [],
+  interval: null,
+  state: 'seated',
+  bonusTotal: 0
+};
+
+function formatTime(ms) {
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60).toString().padStart(2, '0');
+  const s = (totalSec % 60).toString().padStart(2, '0');
+  const tenths = Math.floor((ms % 1000) / 100);
+  return `${m}:${s}.${tenths}`;
+}
+
+function updateTC() {
+  const now = tc.running ? Date.now() : null;
+  const current = tc.running ? tc.elapsed + (now - tc.startTime) : tc.elapsed;
+  tcDisplay.textContent = formatTime(current);
+
+  const totalMs = tc.periods.reduce((a, b) => a + b, 0) + current + tc.bonusTotal * 1000;
+  tcTotal.textContent = formatTime(totalMs);
+}
+
+function renderPeriods() {
+  tcPeriods.innerHTML = tc.periods.map((p, i) => `
+    <div class="period">
+      <span class="label">Period ${i + 1}</span>
+      <span class="value">${formatTime(p)}</span>
+    </div>
+  `).join('') || '<div style="color:var(--dim);font-size:0.8rem;padding:0.5rem 0;">No periods yet.</div>';
+
+  if (tc.bonusTotal > 0) {
+    tcPeriods.innerHTML += `
+      <div class="period">
+        <span class="label">🚽 Toilet Bonus</span>
+        <span class="value" style="color:var(--yellow);">+${tc.bonusTotal}s</span>
+      </div>
+    `;
+  }
+}
+
+tcStand.addEventListener('click', () => {
+  if (tc.state === 'seated') {
+    tc.state = 'standing';
+    tc.running = true;
+    tc.startTime = Date.now();
+    tcStand.disabled = true;
+    tcSit.disabled = false;
+    tcLeave.disabled = false;
+    tc.interval = setInterval(updateTC, 100);
+  } else if (tc.state === 'away') {
+    tc.state = 'standing';
+    tc.running = true;
+    tc.startTime = Date.now();
+    tcStand.disabled = true;
+    tcSit.disabled = false;
+    tcLeave.disabled = false;
+    tc.interval = setInterval(updateTC, 100);
+    tcStand.textContent = 'STAND';
+  }
+});
+
+tcSit.addEventListener('click', () => {
+  if (tc.state !== 'standing') return;
+  tc.elapsed += Date.now() - tc.startTime;
+  tc.periods.push(tc.elapsed);
+  tc.elapsed = 0;
+  tc.running = false;
+  tc.state = 'seated';
+  clearInterval(tc.interval);
+  tcStand.disabled = false;
+  tcSit.disabled = true;
+  tcLeave.disabled = true;
+  updateTC();
+  renderPeriods();
+});
+
+tcLeave.addEventListener('click', () => {
+  if (tc.state !== 'standing') return;
+  tc.elapsed += Date.now() - tc.startTime;
+  tc.running = false;
+  tc.state = 'away';
+  clearInterval(tc.interval);
+  tcStand.disabled = false;
+  tcSit.disabled = true;
+  tcLeave.disabled = true;
+  tcStand.textContent = 'RETURN & STAND';
+  updateTC();
+});
+
+toiletSlider.addEventListener('input', () => {
+  const mins = parseInt(toiletSlider.value);
+  toiletMins.textContent = mins;
+  if (mins >= 12) {
+    toiletBonus.textContent = '+60s';
+    toiletBonus.style.color = 'var(--green)';
+  } else {
+    toiletBonus.textContent = '+0s';
+    toiletBonus.style.color = 'var(--dim)';
+  }
+});
+
+document.getElementById('toiletApply').addEventListener('click', () => {
+  const mins = parseInt(toiletSlider.value);
+  if (mins >= 12) {
+    tc.bonusTotal += 60;
+    renderPeriods();
+    updateTC();
+    toiletBonus.textContent = 'APPLIED ✅';
+  } else {
+    toiletBonus.textContent = 'NOT ENOUGH TIME ❌';
+    toiletBonus.style.color = 'var(--red)';
+  }
+});
+
+updateTC();
+renderPeriods();
+
+/* =========================
+   ANGLE CHECKER (no knee)
+   ========================= */
+const angleSlider = document.getElementById('angleSlider');
+const angleVal = document.getElementById('angleVal');
+const angleVerdict = document.getElementById('angleVerdict');
+const legL = document.getElementById('legL');
+const legR = document.getElementById('legR');
+
+function updateAngle() {
+  const angle = parseInt(angleSlider.value);
+  angleVal.textContent = angle + '°';
+
+  const inRange = angle >= 45 && angle <= 135;
+  const standing = inRange;
+
+  const rad = (angle * Math.PI) / 180;
+  const hipX = 100, hipY = 180;
+  const legLen = 100;
+  const footX = hipX + legLen * Math.cos(rad);
+  const footY = hipY + legLen * Math.sin(rad);
+
+  // Knees assumed straight: midpoint between hip and foot
+  const kneeX = hipX + (footX - hipX) * 0.5;
+  const kneeY = hipY + (footY - hipY) * 0.5;
+
+  legL.setAttribute('x2', kneeX);
+  legL.setAttribute('y2', kneeY);
+  legR.setAttribute('x2', footX);
+  legR.setAttribute('y2', footY);
+
+  if (standing) {
+    angleVerdict.className = 'verdict stand';
+    angleVerdict.textContent = '✅ STANDING';
+  } else {
+    angleVerdict.className = 'verdict sit';
+    angleVerdict.textContent = '❌ SITTING';
+  }
+}
+
+angleSlider.addEventListener('input', updateAngle);
+updateAngle();
+
+/* =========================
+   RISK SIMULATOR (with VR/1PT/4PT)
+   ========================= */
+const riskMeter = document.getElementById('riskMeter');
+const riskVal = document.getElementById('riskVal');
+const riskScore = document.getElementById('riskScore');
+const riskLog = document.getElementById('riskLog');
+const slotVR = document.getElementById('slotVR');
+const slot1PT = document.getElementById('slot1PT');
+const slot4PT = document.getElementById('slot4PT');
+
+let riskState = {
+  awareness: 60,
+  score: 0,
+  catches: 0,
+  out: false
+};
+
+function updateRiskMeter() {
+  riskState.awareness = Math.floor(Math.random() * 80) + 20;
+  riskMeter.style.width = riskState.awareness + '%';
+  riskVal.textContent = riskState.awareness + '%';
+}
+
+function logRisk(msg, cls) {
+  const div = document.createElement('div');
+  div.className = cls;
+  div.textContent = msg;
+  riskLog.insertBefore(div, riskLog.firstChild);
+  if (riskLog.children.length > 20) riskLog.removeChild(riskLog.lastChild);
+}
+
+function resetRiskSlots() {
+  slotVR.className = 'consequence-slot';
+  slot1PT.className = 'consequence-slot';
+  slot4PT.className = 'consequence-slot';
+}
+
+function applyConsequence() {
+  riskState.catches++;
+  resetRiskSlots();
+
+  if (riskState.catches === 1) {
+    slotVR.classList.add('active-vr');
+    logRisk(`⚠️ Teacher noticed. VR issued. (Score unchanged: ${riskState.score})`, 'warn');
+  } else if (riskState.catches === 2) {
+    slotVR.classList.add('active-vr');
+    slot1PT.classList.add('active-1pt');
+    riskState.score = -5;
+    riskScore.textContent = riskState.score;
+    logRisk(`⚠️ Teacher noticed again. 1PT issued. Score → −5`, 'bad');
+  } else if (riskState.catches >= 3) {
+    slotVR.classList.add('active-vr');
+    slot1PT.classList.add('active-1pt');
+    slot4PT.classList.add('active-4pt');
+    riskState.out = true;
+    logRisk(`❌ Teacher noticed a third time. 4PT RESET. Removed from the game.`, 'bad');
+    document.querySelectorAll('.risk-btn').forEach(b => b.disabled = true);
+  }
+}
+
+document.querySelectorAll('.risk-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (riskState.out) return;
+
+    const action = btn.dataset.action;
+    updateRiskMeter();
+
+    const roll = Math.random() * 100;
+    const noticed = roll < riskState.awareness;
+
+    if (action === 'stand') {
+      if (noticed) {
+        applyConsequence();
+      } else {
+        riskState.score += 1;
+        riskScore.textContent = riskState.score;
+        logRisk(`You stood. Teacher didn't notice. +1 point. Score → ${riskState.score}`, 'good');
+      }
+    } else if (action === 'wait') {
+      logRisk(`You waited. Teacher awareness now ${riskState.awareness}%.`, 'neutral');
+    } else if (action === 'sit') {
+      logRisk(`You sat. Safe. Score → ${riskState.score}`, 'neutral');
+    }
+  });
+});
+
+document.getElementById('riskReset').addEventListener('click', () => {
+  riskState = { awareness: 60, score: 0, catches: 0, out: false };
+  riskScore.textContent = '0';
+  riskMeter.style.width = '60%';
+  riskVal.textContent = '60%';
+  resetRiskSlots();
+  riskLog.innerHTML = '<div class="neutral">Ready. Choose an action.</div>';
+  document.querySelectorAll('.risk-btn').forEach(b => b.disabled = false);
+});
+
+/* =========================
+   REVEAL ON SCROLL
+   ========================= */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) e.target.classList.add('visible');
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
